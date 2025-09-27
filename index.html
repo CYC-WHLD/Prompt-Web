@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 作文批改指令</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background: #f8f8f8;
+            color: #333;
+            min-height: 100vh;
+            transition: background 0.8s ease;
+            overflow-x: hidden;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        body.dark-mode {
+            background: #2c2c2e;
+            color: #fff;
+        }
+
+        /* 主標題 */
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 20px 0 30px;
+            text-align: center;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            transition: all 0.5s ease;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            border-radius: 2px;
+        }
+
+        body.dark-mode .main-title {
+            background: linear-gradient(45deg, #64B5F6, #BA68C8);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        body.dark-mode .main-title::after {
+            background: linear-gradient(45deg, #64B5F6, #BA68C8);
+        }
+
+        /* A4 格式容器 */
+        .a4-container {
+            width: 210mm;
+            min-height: 290mm;
+            padding: 10mm;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        body.dark-mode .a4-container {
+            background: #3a3a3c;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        /* 文華高中的標題 */
+        .corner-text {
+        position: fixed;
+        top: 0.1px;
+        left: 0.1px;
+        font-size: 0.7rem;
+        color: #0000006f;
+        z-index: 1000;
+        margin: 0;
+        padding: 10px;
+        transition: all 0.8s ease;
+        }
+
+        body.dark-mode .corner-text {
+            color: #ffffff;
+        } 
+
+        /* 蘋果風格邊框 - 右上角 */
+        .apple-frame {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 66px;
+            height: 66px;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #2a2a3a, #1a1a2a);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.3),
+                inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+                inset 0 4px 8px rgba(100, 100, 150, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            z-index: 1000;
+            transition: all 0.8s ease;
+        }
+
+        body.dark-mode .apple-frame {
+            background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.2),
+                inset 0 -4px 8px rgba(0, 0, 0, 0.1),
+                inset 0 4px 8px rgba(255, 255, 255, 0.6);
+        }
+
+        .apple-frame::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 16px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+            pointer-events: none;
+        }
+
+        body.dark-mode .apple-frame::after {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+
+        /* 圖標容器 */
+        .toggle-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.8s ease;
+        }
+
+        .toggle-icon .sun-container, .toggle-icon .moon {
+            transition: all 0.8s ease;
+            position: absolute;
+        }
+
+        /* 初始狀態：顯示太陽（白色背景） */
+        .toggle-icon .sun-container {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+
+        .toggle-icon .moon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+
+        /* 切換狀態：顯示月亮（黑色背景） */
+        .toggle-icon.active .sun-container {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+
+        .toggle-icon.active .moon {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+
+        /* 太陽圖標樣式 */
+        .sun-container {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sun-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, rgba(255,215,0,0) 70%);
+            animation: sun-glowing 3s infinite alternate;
+            filter: blur(3px);
+        }
+
+        .sun-glow-outer {
+            position: absolute;
+            width: 140%;
+            height: 140%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0) 60%);
+            animation: sun-glowing-outer 4s infinite alternate;
+            filter: blur(5px);
+        }
+
+        .sun.icon {
+            color: #FFD700;
+            position: relative;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 
+                0 0 0 1px rgba(255, 215, 0, 0.8),
+                0 0 8px rgba(255, 215, 0, 0.6),
+                0 0 16px rgba(255, 215, 0, 0.4),
+                -12px 0 0 -4px currentColor, 
+                12px 0 0 -4px currentColor, 
+                0 -12px 0 -4px currentColor, 
+                0 12px 0 -4px currentColor, 
+                -9px -9px 0 -4px currentColor, 
+                -9px 9px 0 -4px currentColor, 
+                9px -9px 0 -4px currentColor, 
+                9px 9px 0 -4px currentColor;
+            animation: sun-pulse 3s infinite alternate;
+            z-index: 2;
+        }
+
+        /* 月亮圖標樣式 */
+        .moon.icon {
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+
+        /* 暗月部分 */
+        .moon.icon .dark-moon {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(60, 60, 100, 0.8);
+            box-shadow: 
+                0 0 8px rgba(0, 0, 0, 0.5),
+                inset 0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 新月部分 */
+        .moon.icon .crescent {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            background: #E4EDF8;
+            box-shadow: 
+                0 0 10px #FFFFFF,
+                inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+            top: 20%;
+            left: 10%;
+            animation: crescent-glow 4s infinite alternate;
+            transform: rotate(-15deg);
+        }
+
+        /* 星星效果 */
+        .moon.icon .star {
+            position: absolute;
+            background: #FFFFFF;
+            border-radius: 50%;
+            box-shadow: 0 0 2px #FFFFFF;
+            animation: twinkle 3s infinite alternate;
+        }
+
+        .moon.icon .star:nth-child(3) {
+            width: 1px;
+            height: 1px;
+            top: 15%;
+            right: 20%;
+            animation-delay: 0.5s;
+        }
+
+        .moon.icon .star:nth-child(4) {
+            width: 1px;
+            height: 1px;
+            bottom: 25%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+
+        .moon.icon .star:nth-child(5) {
+            width: 2px;
+            height: 2px;
+            top: 40%;
+            right: 5%;
+            animation-delay: 1.5s;
+        }
+
+        /* 內容區域 */
+        .content-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        /* 霧面玻璃區塊 */
+        .glass-block {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            min-height: 200px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .glass-block {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-block:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .glass-block h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+
+        body.dark-mode .glass-block h3 {
+            color: #64B5F6;
+        }
+
+        .glass-block p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .glass-block pre {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 40px;
+            font-size: 0.85rem;
+            position: relative;
+        }
+
+        body.dark-mode .glass-block pre {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-block code {
+            font-family: 'Courier New', monospace;
+            display: block;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        /* 自定義滾動條 */
+        .glass-block pre::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .glass-block pre::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .glass-block pre::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .glass-block pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark-mode .glass-block pre::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .glass-block pre::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        body.dark-mode .glass-block pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 液態玻璃複製按鈕 - 放在左下角 */
+        .copy-btn {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            background: linear-gradient(45deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4));
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            color: #333;
+            font-weight: 600;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            font-size: 0.9rem;
+        }
+
+        body.dark-mode .copy-btn {
+            background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+            color: #fff;
+        }
+
+        .copy-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0.2),
+                rgba(255, 255, 255, 0.05),
+                rgba(255, 255, 255, 0.2)
+            );
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+        }
+
+        .copy-btn:hover::before {
+            transform: rotate(45deg) translate(20%, 20%);
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .copy-btn:active {
+            transform: translateY(1px);
+        }
+
+        .copy-message {
+            position: absolute;
+            left: 20px;
+            bottom: 55px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .copy-success {
+            color: #2ecc71;
+        }
+
+        .copy-error {
+            color: #e74c3c;
+        }
+
+        /* 渲染區域 */
+        .render-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .render-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            min-height: 200px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: auto;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .word-count {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font-size: 0.9rem;
+        color: #666;
+        
+        padding: 5px 10px;
+        border-radius: 4px;
+        }
+
+        body.dark-mode .word-count {
+            color: #ccc;
+        }
+    
+
+        body.dark-mode .render-area {
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .input-area {
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-area textarea {
+            width: 100%;
+            min-height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            color: inherit;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        body.dark-mode .input-area textarea {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 自定義textarea滾動條 */
+        .input-area textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .input-area textarea::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .input-area textarea::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .input-area textarea::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark-mode .input-area textarea::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .input-area textarea::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        body.dark-mode .input-area textarea::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 動畫效果 */
+        @keyframes sun-pulse {
+            0% {
+                box-shadow: 
+                    0 0 0 1px rgba(255, 215, 0, 0.8),
+                    0 0 8px rgba(255, 215, 0, 0.6),
+                    0 0 16px rgba(255, 215, 0, 0.4),
+                    -12px 0 0 -4px #FFD700, 
+                    12px 0 0 -4px #FFD700, 
+                    0 -12px 0 -4px #FFD700, 
+                    0 12px 0 -4px #FFD700, 
+                    -9px -9px 0 -4px #FFD700, 
+                    -9px 9px 0 -4px #FFD700, 
+                    9px -9px 0 -4px #FFD700, 
+                    9px 9px 0 -4px #FFD700;
+            }
+            100% {
+                box-shadow: 
+                    0 0 0 2px rgba(255, 215, 0, 0.9),
+                    0 0 12px rgba(255, 215, 0, 0.8),
+                    0 0 24px rgba(255, 215, 0, 0.6),
+                    -12px 0 0 -3px #FFAA00, 
+                    12px 0 0 -3px #FFAA00, 
+                    0 -12px 0 -3px #FFAA00, 
+                    0 12px 0 -3px #FFAA00, 
+                    -9px -9px 0 -3px #FFAA00, 
+                    -9px 9px 0 -3px #FFAA00, 
+                    9px -9px 0 -3px #FFAA00, 
+                    9px 9px 0 -3px #FFAA00;
+            }
+        }
+
+        @keyframes sun-glowing {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0.8;
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes sun-glowing-outer {
+            0% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes crescent-glow {
+            0% {
+                box-shadow: 
+                    0 0 8px #FFFFFF,
+                    inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+            }
+            100% {
+                box-shadow: 
+                    0 0 14px #FFFFFF,
+                    inset -2px -2px 6px rgba(255, 255, 255, 0.7);
+            }
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        @media print {
+            .apple-frame, .instructions, .main-title {
+                display: none;
+            }
+            
+            .a4-container {
+                box-shadow: none;
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2 class="corner-text">臺中市立文華高中</h2>
+    <h1 class="main-title" contenteditable="true" onclick="this.select()">AI 作文批改指令</h1>
+
+    <div class="apple-frame">
+        <div class="toggle-icon active" id="toggleIcon">
+            <div class="sun-container">
+                <div class="sun-glow-outer"></div>
+                <div class="sun-glow"></div>
+                <div class="sun icon"></div>
+            </div>
+            <div class="moon icon">
+                <div class="dark-moon"></div>
+                <div class="crescent"></div>
+                <div class="star"></div>
+                <div class="star"></div>
+                <div class="star"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="a4-container">
+        <div class="content-container">
+            
+            <!-- 區塊1 -->
+            <div class="glass-block">
+                <h3>步驟零 將拍請AI轉成文檔，讓AI圖轉文正確度最高，請須給以下指令</h3>
+                <p>提示詞1️⃣</p>
+                <pre><code>&nbsp;請將以下英文作文圖片轉成文字檔，保持原文內容、標點和錯字，不做任何修改。<br>【匯入圖片】</code></pre>
+                <button class="copy-btn" onclick="copyCode(this)">點我複製</button>
+                <div class="copy-message"></div>
+            </div>
+
+            <!-- 區塊2 -->
+            <div class="glass-block">
+                <h3>步驟一 ChatGPT 評分，指令(prompt)如下</h3>
+                <p>提示詞 2️⃣</p>
+                <pre><code>&nbsp;This is a writing exercise. <br>&nbsp;The writing prompt is as follows in Chinese.  
+&nbsp;Writing prompt: 
+&nbsp;你認為下面兩張圖片中呈現的是什麼景象？你對這些景象有什麼感想？請根據圖片內容，寫一篇英文作文，文分兩段。第一段描述兩張圖片的內容，包括其中的人、事、物以及發生的事情；第二段說明你認為未來可以採取什麼具體的因應措施，以避免類似景象再度發生。(補充說明：第二張圖片已設定學生戴口罩上學)
+&nbsp;Please grade the paragraph based on the following scoring criteria: 
+&nbsp;A. Content, 5 points
+&nbsp;B. Organization, 5 points
+&nbsp;C. Grammar and sentence structure, 5 points
+&nbsp;D. Vocabulary and spelling, 5 points
+【請在下方貼上作文】
+</code></pre>
+                <button class="copy-btn" onclick="copyCode(this)">點我複製</button>
+                <div class="copy-message"></div>
+            </div>
+            
+            <!-- 區塊3 -->
+            <div class="glass-block">
+                <h3>步驟二 請 ChatGPT 幫你修改文法錯誤，指令 (prompt) 如下:</h3>
+                <p>提示詞 3️⃣</p>
+                <pre><code>Correct grammatical errors and typos in the following passage.<br>Do not make other changes.
+請按以下要求執行：
+1. 找出文章中的文法錯誤（拼字、文法、用詞、搭配等），但不修改作者意思。
+2. 輸出全文，並使用螢光標記。
+3. 紅色螢光筆標錯誤字詞，綠色螢光筆標正確字詞，兩者之間加箭頭「→」。
+4. 使用程式碼區塊 (code block) 輸出結果。
+5. 使用 HTML 語法：錯誤字->正確詞
+6. 保持文章原本段落結構不變。
+7. 每段文章首行縮排四個空格（可用 CSS `text-indent:2em;` 或空格）。
+8. AI 回覆語言設定為繁體中文（預設）。
+9. 不額外添加評論或說明。
+10. 除了這篇文章用 code block 呈現，後續問題以一般回覆。
+11. 文章共兩段，除非原文分段，否則每句不換行。
+12. HTML 可在瀏覽器直接渲染紅綠螢光筆效果。
+✅ 文章/句子如下【請在下方貼上作文】：</code></pre>
+                <button class="copy-btn" onclick="copyCode(this)">點我複製</button>
+                <div class="copy-message"></div>
+            </div>
+            
+            <!-- 區塊4 -->
+            <div class="glass-block">
+                <h3>步驟三 請ChatGPT幫你改寫文章，指令(prompt)如下:</h3>
+                <p>提示詞 4️⃣</p>
+                <pre><code>Please revise my writing again to make it smoother and more natural. Improve sentence flow, add appropriate transition words, and correct awkward or unnatural expressions (such as Chinglish). You may also adjust the style and wording to improve clarity and coherence.
+#language level: CEFR B1
+#length: 150 words (可根據你目前寫的字數調整)</code></pre>
+                <button class="copy-btn" onclick="copyCode(this)">點我複製</button>
+                <div class="copy-message"></div>
+            </div>
+            
+            <!-- 區塊5 - 已修改為使用 glass-block 類別 -->
+            <div class="glass-block">
+                <h3>步驟四 將步驟二：AI 幫你改完文法的部分抄一遍，交給老師評分</h3>
+                <h3>步驟五 將步驟三修改過的作文可以自己抄一遍，學習、模仿 AI 改的句子！</h3>
+            </div>
+
+            <div class="render-section">
+                 <div class="render-area" id="renderArea">
+                    <div class="word-count"><span id="wordCount">0</span></div>
+                    <h3>渲染預覽區</h3>
+                    <p>在此處顯示輸入的內容。支援 HTML、CSS 和 Markdown 語法。</p>
+                </div>
+                
+                <div class="input-area">
+                    <h3>輸入區</h3>
+                    <textarea id="inputText" placeholder="請輸入 HTML、CSS 或 Markdown 內容..." oninput="renderContent()"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 複製功能
+    function copyCode(button) {
+        const codeBlock = button.previousElementSibling;
+        const codeText = codeBlock.textContent;
+        const message = button.nextElementSibling;
+        
+        navigator.clipboard.writeText(codeText).then(() => {
+            message.textContent = '已複製到剪貼簿！';
+            message.classList.add('copy-success');
+            message.style.opacity = '1';
+            
+            setTimeout(() => {
+                message.style.opacity = '0';
+            }, 2000);
+        }).catch(err => {
+            message.textContent = '複製失敗，請手動複製';
+            message.classList.add('copy-error');
+            message.style.opacity = '1';
+            
+            setTimeout(() => {
+                message.style.opacity = '0';
+            }, 2000);
+        });
+    }
+
+    // 深色模式切換
+    const toggleIcon = document.getElementById('toggleIcon');
+    const body = document.body;
+    
+    toggleIcon.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        toggleIcon.classList.toggle('active');
+    });
+
+    // 渲染功能
+    function renderContent() {
+        const inputText = document.getElementById('inputText').value;
+        const renderArea = document.getElementById('renderArea');
+        
+        // 簡單的Markdown轉HTML（基本功能）
+        let htmlContent = inputText
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 粗體
+            .replace(/\*(.*?)\*/g, '<em>$1</em>') // 斜體
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>') // H1標題
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>') // H2標題
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>') // H3標題
+            .replace(/\n/g, '<br>'); // 換行
+        
+        // 保留字數顯示區域
+        const wordCountElement = '<div class="word-count">字數: <span id="wordCount">0</span></div>';
+        renderArea.innerHTML = wordCountElement + (htmlContent || '<p>在此處顯示輸入的內容。支援 HTML、CSS 和 Markdown 語法。</p>');
+        
+        // 計算字數（每個字符都單獨計算，包括數字、標點符號，空格不算）
+        const textOnly = inputText.replace(/<[^>]*>/g, '').trim();
+        let wordCount = 0;
+
+        if (textOnly) {
+        // 使用正則表達式匹配所有非空白字符
+        const tokens = textOnly.match(/[^\s]/g) || [];
+        wordCount = tokens.length;
+        }
+
+        document.getElementById('wordCount').textContent = wordCount;
+}
+    // 初始化
+    renderContent();
+</script>
+</body>
+</html>
