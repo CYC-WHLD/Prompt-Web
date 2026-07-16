@@ -1,161 +1,150 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <title>AI作文批改</title>
-
-    <!--封面 -->
-    <meta property="og:image" content="https://raw.githubusercontent.com/CYC-WHLD/Prompt-Web/main/8.png">
-    <!-- favicon（瀏覽器標籤圖示） -->
-    <link rel="icon" href="https://raw.githubusercontent.com/CYC-WHLD/Prompt-Web/main/8.png" type="image/png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>AI 作文批改</title>
+
+    <!-- 封面 -->
+    <meta property="og:image" content="https://raw.githubusercontent.com/CYC-WHLD/Prompt-Web/main/8.png">
+    <!-- favicon -->
+    <link rel="icon" href="https://raw.githubusercontent.com/CYC-WHLD/Prompt-Web/main/8.png" type="image/png">
+
     <style>
         /* ==========================================================================
-                                🌐 全域基本設定
-        作用:重置 margin/padding，設定盒模型，避免不同瀏覽器預設差異
-        ========================================================================== */
-        * {
+           CSS 變數 —— 科技感深色基調 + 青色發光
+           ========================================================================== */
+        :root {
+            --bg: #07070f;
+            --bg-dot: rgba(34, 211, 238, 0.08);
+            --bg-card: rgba(15, 15, 28, 0.7);
+            --bg-code: rgba(255, 255, 255, 0.04);
+            --text: #e0e0f0;
+            --text-secondary: #b0b0cc;
+            --text-muted: #7a7a9a;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-card: rgba(255, 255, 255, 0.04);
+            --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 8px rgba(34, 211, 238, 0.1);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 16px rgba(34, 211, 238, 0.12);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(34, 211, 238, 0.15);
+            --accent: #22d3ee;
+            --accent-hover: #38bdf8;
+            --accent-light: rgba(34, 211, 238, 0.08);
+            --gradient-accent: linear-gradient(135deg, #0ea5e9, #6366f1);
+            --gradient-text: linear-gradient(135deg, #22d3ee, #a78bfa);
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-full: 100px;
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --max-width: 820px;
+            --glass-blur: 18px;
+        }
+
+        /* 淺色模式 */
+        body.light-mode {
+            --bg: #f2f5fa;
+            --bg-dot: rgba(14, 165, 233, 0.06);
+            --bg-card: rgba(255, 255, 255, 0.72);
+            --bg-code: rgba(10, 20, 40, 0.03);
+            --text: #1a1a2e;
+            --text-secondary: #4a4a68;
+            --text-muted: #6b6b88;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-card: rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.04), 0 0 8px rgba(14, 165, 233, 0.1);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.06), 0 0 16px rgba(14, 165, 233, 0.12);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08), 0 0 24px rgba(14, 165, 233, 0.15);
+            --accent: #0ea5e9;
+            --accent-hover: #0284c7;
+            --accent-light: rgba(14, 165, 233, 0.08);
+            --gradient-accent: linear-gradient(135deg, #0ea5e9, #6366f1);
+            --gradient-text: linear-gradient(135deg, #0ea5e9, #7c3aed);
+        }
+
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* ==========================================================================
-                                🖋️ 網頁基本字體與背景
-        作用：設定全局字體、行高、背景顏色及深色模式切換效果
-        ========================================================================== */
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            background: #f8f8f8;
-            color: #333;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.7;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle, var(--bg-dot) 1px, transparent 1px);
+            background-size: 22px 22px;
+            color: var(--text);
             min-height: 100vh;
-            transition: background 0.8s ease;
-            overflow-x: hidden;
-            padding: 20px;
-            position: relative;
+            transition: background-color var(--transition-smooth), color var(--transition-smooth);
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        body.dark-mode {
-            background: #2c2c2e;
-            color: #fff;
-        }
-
-        /* ==========================================================================
-                                🏷️ 主標題樣式
-        作用：設定標題字體大小、漸層文字、下方裝飾線，支援深色模式
-        ========================================================================== */
-        .main-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 20px 0 30px;
-            text-align: center;
-            background: linear-gradient(45deg, #3498db, #9b59b6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            transition: all 0.5s ease;
+            padding: 16px;
             position: relative;
-            padding-bottom: 10px;
         }
 
-        .main-title::after {
+        .top-bar {
+            width: 100%;
+            max-width: var(--max-width);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            margin-bottom: 12px;
+            gap: 16px;
+        }
+
+        .school-tag {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color var(--transition-smooth);
+        }
+
+        .school-tag::before {
             content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(45deg, #3498db, #9b59b6);
-            border-radius: 2px;
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            flex-shrink: 0;
         }
 
-        body.dark-mode .main-title {
-            background: linear-gradient(45deg, #64B5F6, #BA68C8);
-            -webkit-background-clip: text;
-            background-clip: text;
-        }
-
-        body.dark-mode .main-title::after {
-            background: linear-gradient(45deg, #64B5F6, #BA68C8);
-        }
-
-        /* ==========================================================================
-                                📄 A4 格式容器
-        作用：模擬 A4 紙張大小，設定內距、陰影、邊框圓角，支援深色模式
-        ========================================================================== */
-        .a4-container {
-            width: 210mm;
-            min-height: 290mm;
-            padding: 10mm;
-            margin: 20px auto;
-            background: white;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-            position: relative;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 10px;
-        }
-
-        body.dark-mode .a4-container {
-            background: #3a3a3c;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* ==========================================================================
-                                📝 左上角固定文字
-        作用：顯示頁面小標題或標識，固定在左上角，支援深色模式切換
-        ========================================================================== */
-        .corner-text {
-            position: fixed;
-            top: 0.1px;
-            left: 0.1px;
-            font-size: 0.7rem;
-            color: #0000006f;
-            z-index: 1000;
-            margin: 0;
-            padding: 10px;
-            transition: all 0.8s ease;
-        }
-
-        body.dark-mode .corner-text {
-            color: #ffffff;
-        }
-
-        /* ==========================================================================
-                                🍎 蘋果風格右上角按鈕容器
-        作用：模擬 macOS 圓角按鈕風格，帶內外陰影，支援深色模式
-        ========================================================================== */
         .apple-frame {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 66px;
-            height: 66px;
-            border-radius: 16px;
-            background: linear-gradient(145deg, #2a2a3a, #1a1a2a);
-            box-shadow: 
-                0 6px 12px rgba(0, 0, 0, 0.3),
-                inset 0 -4px 8px rgba(0, 0, 0, 0.3),
-                inset 0 4px 8px rgba(100, 100, 150, 0.2);
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e1e32, #0f0f1c);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), inset 0 -4px 8px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(100, 100, 180, 0.2);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 8px;
+            padding: 7px;
             z-index: 1000;
-            transition: all 0.8s ease;
-        }
-
-        body.dark-mode .apple-frame {
-            background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
-            box-shadow: 
-                0 6px 12px rgba(0, 0, 0, 0.2),
-                inset 0 -4px 8px rgba(0, 0, 0, 0.1),
-                inset 0 4px 8px rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all var(--transition-smooth);
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
         }
 
         .apple-frame::after {
@@ -165,94 +154,79 @@
             left: 0;
             right: 0;
             bottom: 0;
-            border-radius: 16px;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
             pointer-events: none;
         }
 
-        body.dark-mode .apple-frame::after {
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        body.light-mode .apple-frame {
+            background: linear-gradient(145deg, #2a2a3a, #1a1a2a);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 -4px 8px rgba(0, 0, 0, 0.3), inset 0 4px 8px rgba(100, 100, 150, 0.2);
+        }
+        body.light-mode .apple-frame::after {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
         }
 
-        /* ==========================================================================
-                                🌞🌙 主題切換圖標容器
-        作用：提供深淺模式切換，內含太陽與月亮動畫，支援切換效果
-        ========================================================================== */
         .toggle-icon {
-            width: 48px;
-            height: 48px;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             position: relative;
-            transition: all 0.8s ease;
+            transition: all var(--transition-smooth);
         }
 
-        .toggle-icon .sun-container, .toggle-icon .moon {
+        .toggle-icon .sun-container,
+        .toggle-icon .moon {
             transition: all 0.8s ease;
             position: absolute;
         }
 
-        /* 初始狀態：顯示太陽 */
         .toggle-icon .sun-container {
             opacity: 1;
             transform: rotate(0) scale(1);
         }
-
-        /* 初始狀態：隱藏月亮 */
         .toggle-icon .moon {
             opacity: 0;
             transform: rotate(90deg) scale(0.5);
         }
-
-        /* 切換狀態：顯示月亮，隱藏太陽 */
         .toggle-icon.active .sun-container {
             opacity: 0;
             transform: rotate(-90deg) scale(0.5);
         }
-
         .toggle-icon.active .moon {
             opacity: 1;
             transform: rotate(0) scale(1);
         }
 
-        /* ==========================================================================
-                                🌞 太陽圖標與光暈效果
-        作用：模擬太陽光暈動畫，包含中心太陽與內外光暈，支援脈動效果
-        ========================================================================== */
         .sun-container {
             position: relative;
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-
-        /* 太陽光暈內圈 */
         .sun-glow {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, rgba(255,215,0,0) 70%);
+            background: radial-gradient(circle, rgba(255,215,0,0.5) 0%, rgba(255,215,0,0) 70%);
             animation: sun-glowing 3s infinite alternate;
             filter: blur(3px);
         }
-
-        /* 太陽光暈外圈 */
         .sun-glow-outer {
             position: absolute;
             width: 140%;
             height: 140%;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0) 60%);
+            background: radial-gradient(circle, rgba(255,215,0,0.25) 0%, rgba(255,215,0,0) 60%);
             animation: sun-glowing-outer 4s infinite alternate;
             filter: blur(5px);
         }
-
-        /* 太陽圖標中心圓 + 光芒 */
         .sun.icon {
             color: #FFD700;
             position: relative;
@@ -260,61 +234,36 @@
             height: 10px;
             border-radius: 50%;
             background: currentColor;
-            box-shadow: 
-                0 0 0 1px rgba(255, 215, 0, 0.8),
-                0 0 8px rgba(255, 215, 0, 0.6),
-                0 0 16px rgba(255, 215, 0, 0.4),
-                -12px 0 0 -4px currentColor, 
-                12px 0 0 -4px currentColor, 
-                0 -12px 0 -4px currentColor, 
-                0 12px 0 -4px currentColor, 
-                -9px -9px 0 -4px currentColor, 
-                -9px 9px 0 -4px currentColor, 
-                9px -9px 0 -4px currentColor, 
-                9px 9px 0 -4px currentColor;
+            box-shadow: 0 0 0 1px rgba(255,215,0,0.8), 0 0 8px rgba(255,215,0,0.6), 0 0 16px rgba(255,215,0,0.4), -12px 0 0 -4px currentColor, 12px 0 0 -4px currentColor, 0 -12px 0 -4px currentColor, 0 12px 0 -4px currentColor, -9px -9px 0 -4px currentColor, -9px 9px 0 -4px currentColor, 9px -9px 0 -4px currentColor, 9px 9px 0 -4px currentColor;
             animation: sun-pulse 3s infinite alternate;
             z-index: 2;
         }
 
-        /* ==========================================================================
-                                🌙 月亮圖標（暗月、新月、星星）
-         用：模擬夜晚月亮，包含暗月遮罩、新月亮光、閃爍星星效果
-        ========================================================================== */
         .moon.icon {
             position: relative;
-            width: 40px;
-            height: 40px;
+            width: 34px;
+            height: 34px;
         }
-
-        /* 暗月部分：模擬月亮陰影 */
         .moon.icon .dark-moon {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: rgba(60, 60, 100, 0.8);
-            box-shadow: 
-                0 0 8px rgba(0, 0, 0, 0.5),
-                inset 0 0 8px rgba(0, 0, 0, 0.3);
+            background: rgba(60, 60, 100, 0.85);
+            box-shadow: 0 0 8px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.3);
         }
-
-        /* 新月部分：帶光暈的彎月 */
         .moon.icon .crescent {
             position: absolute;
             width: 60%;
             height: 60%;
             border-radius: 50%;
             background: #E4EDF8;
-            box-shadow: 
-                0 0 10px #FFFFFF,
-                inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 10px #FFFFFF, inset -2px -2px 4px rgba(255,255,255,0.5);
             top: 20%;
             left: 10%;
             animation: crescent-glow 4s infinite alternate;
             transform: rotate(-15deg);
         }
-
-        /* 星星效果：隨機閃爍的小點 */
         .moon.icon .star {
             position: absolute;
             background: #FFFFFF;
@@ -322,276 +271,168 @@
             box-shadow: 0 0 2px #FFFFFF;
             animation: twinkle 3s infinite alternate;
         }
+        .moon.icon .star:nth-child(3) { width:1px; height:1px; top:15%; right:20%; animation-delay:0.5s; }
+        .moon.icon .star:nth-child(4) { width:1px; height:1px; bottom:25%; right:15%; animation-delay:1s; }
+        .moon.icon .star:nth-child(5) { width:2px; height:2px; top:40%; right:5%; animation-delay:1.5s; }
 
-        .moon.icon .star:nth-child(3) {
-            width: 1px;
-            height: 1px;
-            top: 15%;
-            right: 20%;
-            animation-delay: 0.5s;
-        }
-
-        .moon.icon .star:nth-child(4) {
-            width: 1px;
-            height: 1px;
-            bottom: 25%;
-            right: 15%;
-            animation-delay: 1s;
-        }
-
-        .moon.icon .star:nth-child(5) {
-            width: 2px;
-            height: 2px;
-            top: 40%;
-            right: 5%;
-            animation-delay: 1.5s;
-        }
-
-        /* ==========================================================================
-                                ⚡ 太陽與月亮動畫效果
-        作用：定義太陽脈動、光暈擴散、新月光暈、星星閃爍動畫
-        ========================================================================== */
         @keyframes sun-pulse {
-            0% {
-                box-shadow: 
-                    0 0 0 1px rgba(255, 215, 0, 0.8),
-                    0 0 8px rgba(255, 215, 0, 0.6),
-                    0 0 16px rgba(255, 215, 0, 0.4),
-                    -12px 0 0 -4px #FFD700, 
-                    12px 0 0 -4px #FFD700, 
-                    0 -12px 0 -4px #FFD700, 
-                    0 12px 0 -4px #FFD700, 
-                    -9px -9px 0 -4px #FFD700, 
-                    -9px 9px 0 -4px #FFD700, 
-                    9px -9px 0 -4px #FFD700, 
-                    9px 9px 0 -4px #FFD700;
-            }
-            100% {
-                box-shadow: 
-                    0 0 0 2px rgba(255, 215, 0, 0.9),
-                    0 0 12px rgba(255, 215, 0, 0.8),
-                    0 0 24px rgba(255, 215, 0, 0.6),
-                    -12px 0 0 -3px #FFAA00, 
-                    12px 0 0 -3px #FFAA00, 
-                    0 -12px 0 -3px #FFAA00, 
-                    0 12px 0 -3px #FFAA00, 
-                    -9px -9px 0 -3px #FFAA00, 
-                    -9px 9px 0 -3px #FFAA00, 
-                    9px -9px 0 -3px #FFAA00, 
-                    9px 9px 0 -3px #FFAA00;
-            }
+            0% { box-shadow: 0 0 0 1px rgba(255,215,0,0.8),0 0 8px rgba(255,215,0,0.6),0 0 16px rgba(255,215,0,0.4),-12px 0 0 -4px #FFD700,12px 0 0 -4px #FFD700,0 -12px 0 -4px #FFD700,0 12px 0 -4px #FFD700,-9px -9px 0 -4px #FFD700,-9px 9px 0 -4px #FFD700,9px -9px 0 -4px #FFD700,9px 9px 0 -4px #FFD700; }
+            100% { box-shadow: 0 0 0 2px rgba(255,215,0,0.9),0 0 12px rgba(255,215,0,0.8),0 0 24px rgba(255,215,0,0.6),-12px 0 0 -3px #FFAA00,12px 0 0 -3px #FFAA00,0 -12px 0 -3px #FFAA00,0 12px 0 -3px #FFAA00,-9px -9px 0 -3px #FFAA00,-9px 9px 0 -3px #FFAA00,9px -9px 0 -3px #FFAA00,9px 9px 0 -3px #FFAA00; }
         }
-
         @keyframes sun-glowing {
-            0% {
-                opacity: 0.6;
-                transform: scale(1);
-            }
-            100% {
-                opacity: 0.8;
-                transform: scale(1.1);
-            }
+            0% { opacity:0.6; transform:scale(1); }
+            100% { opacity:0.9; transform:scale(1.1); }
         }
-
         @keyframes sun-glowing-outer {
-            0% {
-                opacity: 0.3;
-                transform: scale(1);
-            }
-            100% {
-                opacity: 0.5;
-                transform: scale(1.2);
-            }
+            0% { opacity:0.3; transform:scale(1); }
+            100% { opacity:0.5; transform:scale(1.2); }
         }
-
         @keyframes crescent-glow {
-            0% {
-                box-shadow: 
-                    0 0 8px #FFFFFF,
-                    inset -2px -2px 4px rgba(255, 255, 255, 0.5);
-            }
-            100% {
-                box-shadow: 
-                    0 0 14px #FFFFFF,
-                    inset -2px -2px 6px rgba(255, 255, 255, 0.7);
-            }
+            0% { box-shadow:0 0 8px #FFFFFF, inset -2px -2px 4px rgba(255,255,255,0.5); }
+            100% { box-shadow:0 0 14px #FFFFFF, inset -2px -2px 6px rgba(255,255,255,0.7); }
         }
-
         @keyframes twinkle {
-            0% {
-                opacity: 0.3;
-                transform: scale(0.8);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
+            0% { opacity:0.3; transform:scale(0.8); }
+            100% { opacity:1; transform:scale(1.2); }
         }
 
-        /* ==========================================================================
-                                📄 A4 文件容器
-        作用：模擬真實 A4 紙張大小，用於內容排版與打印，支援深色模式
-        ========================================================================== */
-        .a4-container {
-            width: 210mm;
-            min-height: 290mm;
-            padding: 10mm;
-            margin: 20px auto;
-            background: white;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-            position: relative;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 10px;
-        }
-
-        body.dark-mode .a4-container {
-            background: #3a3a3c;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* ==========================================================================
-                                🧊 玻璃模糊效果區塊
-        作用：提供半透明玻璃感背景，支援懸停陰影動畫，增強內容層次感
-        ========================================================================== */
-        .glass-block {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            min-height: 200px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        body.dark-mode .glass-block {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-block:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .glass-block h3 {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: #3498db;
-        }
-
-        body.dark-mode .glass-block h3 {
-            color: #64B5F6;
-        }
-
-        .glass-block p {
-            line-height: 1.6;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
-
-        .glass-block pre {
-            background: rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin-bottom: 40px;
-            font-size: 0.85rem;
-            position: relative;
-        }
-
-        body.dark-mode .glass-block pre {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-block code {
-            font-family: 'Courier New', monospace;
-            display: block;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-
-        .glass-blocktwo {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            min-height: 70px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        body.dark-mode .glass-blocktwo {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-blocktwo h3 {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: #3498db;
-        }
-
-        /* ==========================================================================
-                                📋 複製按鈕與隱藏文字區
-        作用：提供點擊按鈕快速複製內容，並在左下角顯示狀態訊息
-        ========================================================================== */
-        .glass-block img {
-            display: block;
-            border-radius: 8px;
-            margin-top: -3px; /* 個別圖片往上移 */
-        }
-
-        .glass-block .imgp {
-            margin-bottom: 5px; /* 文字和圖片間距 */
-            margin-top: -40px;       /* 如果想讓文字往上靠一些 */
+        .main-title {
+            font-size: clamp(1.6rem, 3vw, 2.3rem);
+            font-weight: 750;
             text-align: center;
-            font-weight: bold;   /* 可選，加粗 */
-        }
-        
-        .hidden-copy {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 1px;
-            height: 1px;
-            overflow: hidden;
-            opacity: 0;
-            white-space: pre-wrap;
-            pointer-events: none;
+            margin: 0 0 28px;
+            background: var(--gradient-text);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+            cursor: text;
+            user-select: all;
+            max-width: var(--max-width);
+            width: 100%;
         }
 
-        .copy-btn {
+        .main-container {
+            width: 100%;
+            max-width: var(--max-width);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 40px;
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 28px 28px 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+        .step-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: rgba(34, 211, 238, 0.3);
+        }
+        .step-card::before {
+            content: '';
             position: absolute;
-            left: 20px;
-            bottom: 20px;
-            background: linear-gradient(45deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4));
-            border: none;
-            padding: 10px 20px;
-            border-radius: 50px;
-            color: #333;
+            left: 0;
+            top: 18px;
+            bottom: 18px;
+            width: 4px;
+            border-radius: 0 3px 3px 0;
+            background: var(--gradient-accent);
+            opacity: 0.5;
+            transition: opacity var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        .step-card:hover::before {
+            opacity: 1;
+            box-shadow: 0 0 14px var(--accent);
+        }
+        .step-card h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+            letter-spacing: -0.01em;
+            line-height: 1.4;
+        }
+        .step-label {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 6px;
+            background: var(--accent-light);
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            transition: all var(--transition-smooth);
+        }
+
+        .step-card pre {
+            background: var(--bg-code);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.65;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            margin: 12px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .step-card pre code {
+            font-family: inherit;
+            display: block;
+        }
+
+        .step-images {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 14px 0;
+        }
+        .img-wrap { text-align: center; flex: 0 1 auto; min-width: 140px; }
+        .img-wrap p { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .img-wrap img { width: 100%; max-width: 320px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); transition: transform var(--transition-fast), box-shadow var(--transition-fast); display: block; margin: 0 auto; }
+        .img-wrap img:hover { transform: scale(1.02); box-shadow: var(--shadow-md); }
+
+        /* 複製按鈕 */
+        .copy-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 9px 18px;
+            border-radius: var(--radius-full);
+            color: #d0d0e0;
             font-weight: 600;
             cursor: pointer;
             overflow: hidden;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            font-family: inherit;
         }
-
-        body.dark-mode .copy-btn {
-            background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-            color: #fff;
-        }
-
         .copy-btn::before {
             content: '';
             position: absolute;
@@ -599,657 +440,365 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(
-                to bottom right,
-                rgba(255, 255, 255, 0.2),
-                rgba(255, 255, 255, 0.05),
-                rgba(255, 255, 255, 0.2)
-            );
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.06), rgba(255,255,255,0.02), rgba(255,255,255,0.06));
             transform: rotate(45deg);
             transition: all 0.5s ease;
         }
+        .copy-btn:hover::before { transform: rotate(45deg) translate(20%, 20%); }
+        .copy-btn:hover { border-color: var(--accent); color: #ffffff; box-shadow: 0 0 15px rgba(34,211,238,0.4), 0 6px 18px rgba(0,0,0,0.3); transform: translateY(-2px); }
+        .copy-btn:active { transform: translateY(1px); transition: 0.1s ease; }
 
-        .copy-btn:hover::before {
-            transform: rotate(45deg) translate(20%, 20%);
+        body.light-mode .copy-btn { background: transparent; border: 1px solid rgba(0,0,0,0.2); color: #3a3a5a; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        body.light-mode .copy-btn:hover { border-color: var(--accent); color: #000; box-shadow: 0 0 15px rgba(14,165,233,0.3), 0 6px 18px rgba(0,0,0,0.1); }
+
+        .step-one-copy { border: 1px solid rgba(34,211,238,0.5); color: #ffffff; box-shadow: 0 0 12px rgba(34,211,238,0.2); }
+        .step-one-copy:hover { border-color: #38bdf8; box-shadow: 0 0 20px rgba(34,211,238,0.5), 0 8px 18px rgba(0,0,0,0.3); transform: translateY(-3px); }
+        body.light-mode .step-one-copy { border: 1px solid rgba(14,165,233,0.5); color: #0c4a6e; box-shadow: 0 0 12px rgba(14,165,233,0.2); }
+        body.light-mode .step-one-copy:hover { border-color: #0284c7; color: #0c4a6e; box-shadow: 0 0 20px rgba(14,165,233,0.4), 0 8px 18px rgba(0,0,0,0.1); }
+
+        .copy-btn.copied { border: 1px solid #22c55e !important; color: #22c55e !important; background: transparent !important; box-shadow: 0 0 15px rgba(34,197,94,0.5) !important; }
+        body.light-mode .copy-btn.copied { color: #16a34a !important; border-color: #22c55e !important; box-shadow: 0 0 15px rgba(34,197,94,0.4) !important; }
+
+        .hidden-copy { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; white-space: pre-wrap; top: 0; left: 0; }
+
+        /* 步驟四/五 */
+        .step-card-compact {
+            background: var(--bg-card); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 22px 28px;
+            box-shadow: var(--shadow-sm); transition: all var(--transition-smooth); position: relative;
+        }
+        .step-card-compact::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 0 3px 3px 0; background: var(--gradient-accent); opacity: 0.5; }
+        .step-card-compact h3 { font-size: 0.98rem; font-weight: 650; color: var(--text); margin-bottom: 6px; line-height: 1.5; }
+
+        /* 合併渲染+輸入卡片 */
+        .render-input-combined { display: flex; flex-direction: column; }
+        .render-input-combined .render-area { background: transparent; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 0 0 20px 0; margin-bottom: 16px; border-bottom: 1px solid var(--border); min-height: 120px; max-height: 350px; overflow-y: auto; position: relative; }
+        .render-input-combined .input-area { background: transparent; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 0; }
+        .render-input-combined .input-area h3 { margin-bottom: 10px; }
+        .render-input-combined .input-area textarea { background: var(--bg-code); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; color: var(--text); font-family: var(--font-mono); font-size: 0.88rem; line-height: 1.6; resize: vertical; outline: none; width: 100%; min-height: 130px; transition: all var(--transition-fast); }
+        .render-input-combined .input-area textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,0.3); }
+
+        .word-count { position: absolute; bottom: 8px; right: 0; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); background: var(--bg-code); padding: 4px 12px; border-radius: var(--radius-full); pointer-events: none; z-index: 2; }
+        .render-content { min-height: 60px; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .main-container { gap: 14px; }
+            .step-card { padding: 18px 16px 16px; border-radius: var(--radius-md); }
+            .step-card pre { padding: 12px 14px; font-size: 0.78rem; }
+            .step-card h3 { font-size: 0.92rem; }
+            .step-card-compact { padding: 16px; border-radius: var(--radius-md); }
+            .render-input-combined .render-area { max-height: 280px; }
+            .copy-btn { padding: 7px 14px; font-size: 0.78rem; }
+            .step-one-copy { padding: 8px 15px; font-size: 0.8rem; }
+            .step-images { gap: 8px; }
+            .img-wrap img { max-width: 100%; }
+            .main-title { font-size: 1.4rem; margin-bottom: 18px; }
+            .top-bar { padding: 4px 6px; }
+            .school-tag { font-size: 0.7rem; }
+            .apple-frame { width: 44px; height: 44px; }
+            .sun-container { width: 32px; height: 32px; }
+            .moon.icon { width: 28px; height: 28px; }
         }
 
-        .copy-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .copy-btn:active {
-            transform: translateY(1px);
-        }
-
-        .copy-message {
-            position: absolute;
-            left: 20px;
-            bottom: 55px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .copy-success {
-            color: #2ecc71;
-        }
-
-        .copy-error {
-            color: #e74c3c;
-        }
-
-        /* ==========================================================================
-        📋 步驟一專用複製按鈕樣式
-        ========================================================================== */
-        .step-one-copy {
-            position: static; /* 取消絕對定位 */
-            margin-top: 15px; /* 與上方內容間距 */
-            left: 20px;
-            bottom: 20px;
-            background: linear-gradient(45deg, rgba(52, 152, 219, 0.7), rgba(155, 89, 182, 0.4));
-            margin-top: 10px;
-            padding: 10px 20px;
-            border-radius: 50px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            font-size: 0.9rem;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .step-one-copy:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-            background: linear-gradient(45deg, rgba(52, 152, 219, 0.8), rgba(155, 89, 182, 0.6));
-        }
-
-        .step-one-copy:active {
-            transform: translateY(1px);
-        }
-
-        .step-one-copy.copy-success-animation {
-            animation: stepOneCopyPulse 0.5s ease;
-        }
-
-        @keyframes stepOneCopyPulse {
-            0% { 
-                transform: scale(1);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            }
-            50% { 
-                transform: scale(0.95);
-                box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
-            }
-            100% { 
-                transform: scale(1);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            }
-        }
-
-        /* 步驟一訊息樣式 */
-        .step-one-message {
-            position: absolute;
-            left: 20px;
-            bottom: 55px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .step-one-message.copy-success {
-            color: #2ecc71;
-        }
-
-        .step-one-message.copy-error {
-            color: #e74c3c;
-        }
-
-        /* 深色模式支援 */
-        body.dark-mode .step-one-copy {
-            background: linear-gradient(45deg, rgba(100, 181, 246, 0.7), rgba(186, 104, 200, 0.4));
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        body.dark-mode .step-one-copy:hover {
-            background: linear-gradient(45deg, rgba(100, 181, 246, 0.8), rgba(186, 104, 200, 0.6));
-        }
-        /* ==========================================================================
-                                🧾 內容渲染區
-        作用：提供半透明玻璃背景區塊，顯示渲染後的文字或 Markdown 內容，支援滾動
-        ========================================================================== */
-        .render-section {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .render-area {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            min-height: 200px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            overflow: auto;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        body.dark-mode .render-area {
-            background: rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        
-        /* ==========================================================================
-                                📝 輸入區域
-        作用：提供使用者輸入文字的半透明玻璃區塊，支援滾動條與深色模式
-        ========================================================================== */
-        .input-area {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        body.dark-mode .input-area {
-            background: rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .input-area textarea {
-            width: 100%;
-            min-height: 120px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            color: inherit;
-            font-family: inherit;
-            resize: vertical;
-        }
-
-        body.dark-mode .input-area textarea {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* 自定義 textarea 滾動條 */
-        .input-area textarea::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .input-area textarea::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-        }
-
-        .input-area textarea::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-        }
-
-        .input-area textarea::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        body.dark-mode .input-area textarea::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        body.dark-mode .input-area textarea::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        body.dark-mode .input-area textarea::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        /* ==========================================================================
-                                📱 響應式與打印樣式
-        作用：調整頁面在列印或小螢幕時的顯示效果，隱藏不必要元素，確保內容完整
-        ========================================================================== */
         @media print {
-            .apple-frame,
-            .instructions,
-            .main-title {
-                display: none; /* 列印時隱藏工具列和主標題 */
-            }
-            
-            .a4-container {
-                box-shadow: none; /* 移除陰影以節省墨水 */
-                width: 100%;      /* 充滿列印頁面 */
-                height: auto;     /* 高度自適應 */
-            }
+            .apple-frame, .top-bar, .main-title, .render-input-combined, .copy-btn, .step-one-copy { display: none !important; }
+            .step-card, .step-card-compact { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+            body { background: #fff; color: #000; padding: 0; }
+            .main-container { max-width: 100%; gap: 10px; }
         }
-
-        /* ==========================================================================
-                                🔢 字數計數器
-        作用：在右下角顯示文字字數，提供即時統計，深色模式自適應
-        ========================================================================== */
-        .word-count {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            font-size: 0.9rem;
-            color: #666;
-            padding: 5px 10px;
-            border-radius: 4px;
-        }
-
-        body.dark-mode .word-count {
-            color: #ccc;
-        }
-
     </style>
-
 </head>
 <body>
-    <h2 class="corner-text">臺中市立文華高中</h2>
-    <h1 class="main-title" contenteditable="true" onclick="this.select()">AI 作文批改指令</h1>
 
-    <div class="apple-frame">
-        <div class="toggle-icon active" id="toggleIcon">
-            <div class="sun-container">
-                <div class="sun-glow-outer"></div>
-                <div class="sun-glow"></div>
-                <div class="sun icon"></div>
-            </div>
-            <div class="moon icon">
-                <div class="dark-moon"></div>
-                <div class="crescent"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="a4-container">
-        <div class="content-container">
-            
-            <!-- 區塊1 -->
-            <div class="glass-block">
-                <h3>步驟零 將照片請AI轉成文檔，讓AI圖轉文正確度最高，請須給以下指令</h3>
-                <p>提示詞1️⃣</p>
-                <pre><code>&nbsp;請將以下英文作文圖片轉成文字檔，保持原文內容、標點和錯字，不做任何修改。<br>【匯入圖片】</code></pre>
-                <button class="copy-btn" onclick="copyCode(this)">點我複製</button>
-                <div class="copy-message"></div>
-            </div>
-
-            <!-- 區塊2 - 步驟一 -->
-            <div class="glass-block">
-                <h3>步驟一 ChatGPT 評分，指令(prompt)如下</h3>
-                <p>提示詞 2️⃣</p>
-
-                <!-- 顯示區塊（不含連結） -->
-                <pre class="display-text">
-This is a writing exercise. The writing prompt is as follows in Chinese. 
-Writing prompt: 
-你認為下面兩張圖片中呈現的是什麼景象？你對這些景象有什麼感想？
-請根據圖片內容，寫一篇英文作文，文分兩段。
-第一段描述兩張圖片的內容，包括其中的人、事、物以及發生的事情；
-第二段說明你認為未來可以採取什麼具體的因應措施，以避免類似景象再度發生。
-(補充說明：第二張圖片已設定學生戴口罩上學)
-圖片一(複製後出現連結)
-圖片二(複製後出現連結)
-Please grade the paragraph based on the following scoring criteria:
-A. Content, 5 points
-B. Organization, 5 points
-C. Grammar and sentence structure, 5 points
-D. Vocabulary and spelling, 5 points
-【請在下方貼上作文】
-                </pre>
-
-                <!-- 圖片區塊 -->
-                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-                    <div>
-                        <p class="imgp" style="text-align:center;">圖片一</p>
-                        <img src="https://image.taisounds.com/newsimages/img/2023/1121/e8b672b74417471e91f8cb651e040fb5.jpg" alt="圖片一" style="width: 325px; border-radius:8px;">
-                    </div>
-                    <div>
-                        <p class="imgp" style="text-align:center;">圖片二</p>
-                        <img src="https://www.eluniversal.com.mx/resizer/v2/S3PJOGFQM5EFNJP6ZBELHVIR7M.jpg?auth=5e7580418d01eef90ea2e960e65a6f258e689554b6ba221984f7bf016e6aa715&smart=true&width=1100&height=666" alt="圖片二" style="width:300px; border-radius:8px;">
-                    </div>
+    <div class="top-bar">
+        <span class="school-tag">臺中市立文華高中</span>
+        <div class="apple-frame" id="themeToggle" title="切換深淺模式">
+            <div class="toggle-icon" id="toggleIcon">
+                <div class="sun-container">
+                    <div class="sun-glow-outer"></div>
+                    <div class="sun-glow"></div>
+                    <div class="sun icon"></div>
                 </div>
-
-                <!-- 隱藏但可複製文字（含連結） -->
-                <pre class="hidden-copy" style="display:none;">
-This is a writing exercise. The writing prompt is as follows in Chinese. Writing prompt: 你認為下面兩張圖片中呈現的是什麼景象？你對這些景象有什麼感想？請根據圖片內容，寫一篇英文作文，文分兩段。第一段描述兩張圖片的內容，包括其中的人、事、物以及發生的事情；第二段說明你認為未來可以採取什麼具體的因應措施，以避免類似景象再度發生。
-(補充說明：第二張圖片已設定學生戴口罩上學) 
-圖片一：
-https://image.taisounds.com/newsimages/img/2023/1121/e8b672b74417471e91f8cb651e040fb5.jpg
-圖片二：
-https://www.eluniversal.com.mx/resizer/v2/S3PJOGFQM5EFNJP6ZBELHVIR7M.jpg?
-Please grade the paragraph based on the following scoring criteria:
-A. Content, 5 points
-B. Organization, 5 points 
-C. Grammar and sentence structure, 5 points 
-D. Vocabulary and spelling, 5 points 
-【請在下方貼上作文】
-                </pre>
-
-                <!-- 複製按鈕 - 步驟一專用 -->
-                <button class="copy-btn step-one-copy" onclick="copyStepOne()">點我複製</button>
-                <div class="copy-message step-one-message"></div>
-            </div>
-
-            <!-- 區塊3 -->
-            <div class="glass-block">
-                <h3>步驟二 請 ChatGPT 幫你修改文法錯誤，指令 (prompt) 如下:</h3>
-                <p>提示詞 3️⃣</p>
-                <pre><code>Correct grammatical errors and typos in the following passage.<br>Do not make other changes.
-請按以下要求執行：
-1. 找出文章中的文法錯誤（拼字、文法、用詞、搭配等），但不修改作者意思。
-2. 輸出全文，並使用螢光標記。
-3. 紅色螢光筆標錯誤字詞，綠色螢光筆標正確字詞，兩者之間加箭頭「→」。
-4. 使用程式碼區塊 (code block) 輸出結果。
-5. 使用 HTML 語法：錯誤字->正確詞
-6. 保持文章原本段落結構不變。
-7. 每段文章首行縮排四個空格（可用 CSS `text-indent:2em;` 或空格）。
-8. AI 回覆語言設定為繁體中文（預設）。
-9. 不額外添加評論或說明。
-10. 除了這篇文章用 code block 呈現，後續問題以一般回覆。
-11. 文章共兩段，除非原文分段，否則每句不換行。
-12. HTML 可在瀏覽器直接渲染紅綠螢光筆效果。
-⭐文章/句子如下【請在下方貼上作文】</code></pre>
-                <button class="copy-btn" onclick="copyCode(this)">點我複製</button>
-                <div class="copy-message"></div>
-            </div>
-            
-            <!-- 區塊4 -->
-            <div class="glass-block">
-                <h3>步驟三 請ChatGPT幫你改寫文章，指令(prompt)如下:</h3>
-                <p>提示詞 4️⃣</p>
-                <pre><code>Please revise my writing again to make it smoother and more natural. Improve sentence flow, add appropriate transition words, and correct awkward or unnatural expressions (such as Chinglish). You may also adjust the style and wording to improve clarity and coherence.
-#language level: CEFR B1
-#length: 150 words (可根據你目前寫的字數調整)</code></pre>
-                <button class="copy-btn" onclick="copyCode(this)">點我複製</button>
-                <div class="copy-message"></div>
-            </div>
-            
-            <!-- 區塊5 - 已修改為使用 glass-block 類別 -->
-            <div class="glass-blocktwo">
-                <h3>步驟四 將步驟二：AI 幫你改完文法的部分抄一遍，交給老師評分</h3>
-                <h3>步驟五 可以將步驟三修過的作文抄一遍，學習、模仿 AI 改的句子！</h3>
-            </div>
-
-            <div class="render-section">
-                 <div class="render-area" id="renderArea">
-                    <div class="word-count"><span id="wordCount">0</span></div>
-                    <h3>渲染預覽區</h3>
-                    <p>在此處顯示輸入的內容。支援 HTML、CSS 和 Markdown 語法。</p>
-                </div>
-                
-                <div class="input-area">
-                    <h3>輸入區</h3>
-                    <textarea id="inputText" placeholder="請輸入 HTML、CSS 或 Markdown 內容..." oninput="renderContent()"></textarea>
+                <div class="moon icon">
+                    <div class="dark-moon"></div>
+                    <div class="crescent"></div>
+                    <div class="star"></div>
+                    <div class="star"></div>
+                    <div class="star"></div>
                 </div>
             </div>
         </div>
     </div>
 
-<script>
-    /* ================================
-    📋 步驟一專用複製功能
-    =============================== */
-    function copyStepOne() {
-        console.log('開始複製步驟一內容');
-        
-        const glassBlock = document.querySelector('.glass-block:nth-child(2)');
-        if (!glassBlock) {
-            console.error('找不到步驟一的區塊');
-            return;
-        }
-        
-        const messageDiv = glassBlock.querySelector('.step-one-message');
-        if (!messageDiv) {
-            console.error('找不到步驟一訊息顯示區域');
-            return;
+    <h1 class="main-title" contenteditable="true" onclick="this.select()">英文作文批改指令</h1>
+
+    <div class="main-container">
+
+        <!-- 步驟零 -->
+        <div class="step-card">
+            <span class="step-label">步驟零</span>
+            <h3>將照片請 AI 轉成文檔，讓 AI 圖轉文正確度最高，請須給以下指令</h3>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px;">提示詞 1</p>
+            <pre><code>請將以下英文作文圖片轉成文字檔，保持原文內容、標點和錯字，不做任何修改。
+                【匯入圖片】</code></pre>
+            <button class="copy-btn" onclick="copyCode(this)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span class="btn-label">點我複製</span>
+            </button>
+        </div>
+
+        <!-- 步驟一 -->
+        <div class="step-card" id="stepOneCard">
+            <span class="step-label">步驟一</span>
+            <h3>ChatGPT 評分，指令 (prompt) 如下</h3>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px;">提示詞 2</p>
+            <pre class="display-text">This is a writing exercise. The writing prompt is as follows in Chinese.
+                Writing prompt:
+                你認為下面兩張圖片中呈現的是什麼景象？你對這些景象有什麼感想？
+                請根據圖片內容，寫一篇英文作文，文分兩段。
+                第一段描述兩張圖片的內容，包括其中的人、事、物以及發生的事情；
+                第二段說明你認為未來可以採取什麼具體的因應措施，以避免類似景象再度發生。
+                (補充說明：第二張圖片已設定學生戴口罩上學)
+                圖片一(複製後出現連結)
+                圖片二(複製後出現連結)
+                Please grade the paragraph based on the following scoring criteria:
+                A. Content, 5 points
+                B. Organization, 5 points
+                C. Grammar and sentence structure, 5 points
+                D. Vocabulary and spelling, 5 points
+                【請在下方貼上作文】</pre>
+
+            <div class="step-images">
+                <div class="img-wrap"><p>圖片一</p><img src="https://image.taisounds.com/newsimages/img/2023/1121/e8b672b74417471e91f8cb651e040fb5.jpg" alt="圖片一" loading="lazy"></div>
+                <div class="img-wrap"><p>圖片二</p><img src="https://www.eluniversal.com.mx/resizer/v2/S3PJOGFQM5EFNJP6ZBELHVIR7M.jpg?auth=5e7580418d01eef90ea2e960e65a6f258e689554b6ba221984f7bf016e6aa715&smart=true&width=1100&height=666" alt="圖片二" loading="lazy"></div>
+            </div>
+
+            <pre class="hidden-copy">This is a writing exercise. The writing prompt is as follows in Chinese. Writing prompt: 你認為下面兩張圖片中呈現的是什麼景象？你對這些景象有什麼感想？請根據圖片內容，寫一篇英文作文，文分兩段。第一段描述兩張圖片的內容，包括其中的人、事、物以及發生的事情；第二段說明你認為未來可以採取什麼具體的因應措施，以避免類似景象再度發生。
+                (補充說明：第二張圖片已設定學生戴口罩上學)
+                圖片一：
+                https://image.taisounds.com/newsimages/img/2023/1121/e8b672b74417471e91f8cb651e040fb5.jpg
+                圖片二：
+                https://www.eluniversal.com.mx/resizer/v2/S3PJOGFQM5EFNJP6ZBELHVIR7M.jpg?
+                Please grade the paragraph based on the following scoring criteria:
+                A. Content, 5 points
+                B. Organization, 5 points
+                C. Grammar and sentence structure, 5 points
+                D. Vocabulary and spelling, 5 points
+            【請在下方貼上作文】</pre>
+
+            <button class="copy-btn step-one-copy" onclick="copyStepOne()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span class="btn-label">點我複製</span>
+            </button>
+        </div>
+
+        <!-- 步驟二 -->
+        <div class="step-card">
+            <span class="step-label">步驟二</span>
+            <h3>請 ChatGPT 幫你修改文法錯誤，指令 (prompt) 如下:</h3>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px;">提示詞 3</p>
+            <pre><code>Correct grammatical errors and typos in the following passage.
+                Do not make other changes.
+                請按以下要求執行：
+                1. 找出文章中的文法錯誤（拼字、文法、用詞、搭配等），但不修改作者意思。
+                2. 輸出全文，並使用螢光標記。
+                3. 紅色螢光筆標錯誤字詞，綠色螢光筆標正確字詞，兩者之間加箭頭「→」。
+                4. 使用程式碼區塊 (code block) 輸出結果。
+                5. 使用 HTML 語法：錯誤字->正確詞
+                6. 保持文章原本段落結構不變。
+                7. 每段文章首行縮排四個空格（可用 CSS `text-indent:2em;` 或空格）。
+                8. AI 回覆語言設定為繁體中文（預設）。
+                9. 不額外添加評論或說明。
+                10. 除了這篇文章用 code block 呈現，後續問題以一般回覆。
+                11. 文章共兩段，除非原文分段，否則每句不換行。
+                12. HTML 可在瀏覽器直接渲染紅綠螢光筆效果。
+                ⭐文章/句子如下【請在下方貼上作文】</code></pre>
+            <button class="copy-btn" onclick="copyCode(this)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span class="btn-label">點我複製</span>
+            </button>
+        </div>
+
+        <!-- 步驟三 -->
+        <div class="step-card">
+            <span class="step-label">步驟三</span>
+            <h3>請 ChatGPT 幫你改寫文章，指令 (prompt) 如下:</h3>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px;">提示詞 4</p>
+            <pre><code>Please revise my writing again to make it smoother and more natural. Improve sentence flow, add appropriate transition words, and correct awkward or unnatural expressions (such as Chinglish). You may also adjust the style and wording to improve clarity and coherence.
+                #language level: CEFR B1
+            #length: 150 words (可根據你目前寫的字數調整)</code></pre>
+            <button class="copy-btn" onclick="copyCode(this)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span class="btn-label">點我複製</span>
+            </button>
+        </div>
+
+        <!-- 步驟四 & 五 -->
+        <div class="step-card-compact">
+            <span class="step-label" style="margin-bottom:10px;">步驟四 & 五</span>
+            <h3>步驟四：將步驟二 AI 幫你改完文法的部分抄一遍，交給老師評分</h3>
+            <h3>步驟五：可以將步驟三修過的作文抄一遍，學習、模仿 AI 改的句子！</h3>
+        </div>
+
+        <!-- 合併後的渲染預覽 + 輸入區 -->
+        <div class="step-card render-input-combined">
+            <div class="render-area" id="renderArea">
+                <div class="word-count">字數：<span id="wordCount">0</span></div>
+                <h3>渲染預覽區</h3>
+                <div id="renderContent" class="render-content">
+                    <p>在此處顯示輸入的內容。支援 HTML、CSS 和 Markdown </p>
+                </div>
+            </div>
+            <div class="input-area">
+                <h3>輸入區</h3>
+                <textarea id="inputText" placeholder="請輸入 HTML、CSS 或 Markdown 內容..." oninput="renderContent()"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getLabelSpan(btn) {
+            return btn ? btn.querySelector('.btn-label') : null;
         }
 
-        const hiddenCopy = glassBlock.querySelector('.hidden-copy');
-        if (!hiddenCopy) {
-            showStepOneMessage(messageDiv, '複製失敗 ❌', 'error');
-            console.error('找不到隱藏複製內容');
-            return;
+        function copyStepOne() {
+            const card = document.getElementById('stepOneCard');
+            if (!card) return;
+            const hidden = card.querySelector('.hidden-copy');
+            if (!hidden) return;
+            const text = hidden.innerText.trim();
+            if (!text) return;
+            const btn = card.querySelector('.step-one-copy');
+            copyToClipboard(text, btn);
         }
 
-        const textToCopy = hiddenCopy.innerText.trim();
-        console.log('要複製的文字長度:', textToCopy.length);
-        
-        if (!textToCopy) {
-            showStepOneMessage(messageDiv, '複製失敗 ❌', 'error');
-            console.error('複製內容為空');
-            return;
+        function copyCode(button) {
+            const card = button.closest('.step-card');
+            if (!card) return;
+            const codeBlock = card.querySelector('pre:not(.hidden-copy):not(.display-text) code');
+            if (!codeBlock) return;
+            const text = codeBlock.innerText.trim();
+            if (!text) return;
+            copyToClipboard(text, button);
         }
 
-        copyStepOneToClipboard(textToCopy, messageDiv);
-    }
-
-    function copyStepOneToClipboard(text, messageDiv) {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        textArea.style.top = '0';
-        textArea.style.opacity = '0';
-        textArea.style.width = '1px';
-        textArea.style.height = '1px';
-        
-        document.body.appendChild(textArea);
-        
-        try {
-            textArea.focus();
-            textArea.select();
-            textArea.setSelectionRange(0, 99999);
-            
-            const successful = document.execCommand('copy');
-            
-            if (successful) {
-                showStepOneMessage(messageDiv, '複製成功 ✅', 'success');
-                const copyBtn = messageDiv.previousElementSibling;
-                if (copyBtn) {
-                    copyBtn.classList.add('copy-success-animation');
-                    setTimeout(() => copyBtn.classList.remove('copy-success-animation'), 500);
-                }
+        function copyToClipboard(text, btn) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    animateButton(btn);
+                }).catch(() => fallbackCopy(text, btn));
             } else {
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        showStepOneMessage(messageDiv, '複製成功 ✅', 'success');
-                    }).catch((err) => {
-                        showStepOneMessage(messageDiv, '複製失敗 ❌', 'error');
-                        console.error('Clipboard API失敗:', err);
-                    });
-                } else {
-                    showStepOneMessage(messageDiv, '複製失敗 ❌', 'error');
-                }
+                fallbackCopy(text, btn);
             }
-        } catch (err) {
-            console.error('步驟一複製錯誤:', err);
-            showStepOneMessage(messageDiv, '複製失敗 ❌', 'error');
-        } finally {
-            document.body.removeChild(textArea);
-        }
-    }
-
-    function showStepOneMessage(messageDiv, text, type) {
-        if (!messageDiv) return;
-        
-        messageDiv.innerText = text;
-        messageDiv.className = `step-one-message copy-${type}`;
-        messageDiv.style.opacity = '1';
-        
-        setTimeout(() => {
-            messageDiv.style.opacity = '0';
-        }, 2000);
-    }
-
-    /* ================================
-    📋 步驟0、2、3 共用複製功能
-    =============================== */
-    function copyCode(button) {
-        const glassBlock = button.closest('.glass-block');
-        if (!glassBlock) return;
-
-        const messageDiv = glassBlock.querySelector('.copy-message');
-        if (!messageDiv) return;
-
-        // 尋找 <pre><code> 內容，如果有 hidden-copy 則保留原本行為（僅步驟一例外）
-        let codeBlock = glassBlock.querySelector('pre code');
-        if (!codeBlock) {
-            showCopyMessage(messageDiv, '複製失敗 ❌', 'error');
-            return;
         }
 
-        const textToCopy = codeBlock.innerText.trim();
-        if (!textToCopy) {
-            showCopyMessage(messageDiv, '複製失敗 ❌', 'error');
-            return;
+        function fallbackCopy(text, btn) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            try {
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, 99999);
+                if (document.execCommand('copy')) {
+                    animateButton(btn);
+                }
+            } catch (e) {
+                // ignore
+            } finally {
+                document.body.removeChild(ta);
+            }
         }
 
-        copyToClipboardImproved(textToCopy, messageDiv);
-    }
+        function animateButton(btn) {
+            if (!btn) return;
+            const label = getLabelSpan(btn);
+            const originalText = label ? label.textContent : '';
+            btn.classList.add('copied');
+            if (label) {
+                label.textContent = '複製成功';
+            }
+            clearTimeout(btn._resetTimeout);
+            btn._resetTimeout = setTimeout(() => {
+                btn.classList.remove('copied');
+                if (label && originalText) {
+                    label.textContent = originalText;
+                }
+            }, 1500);
+        }
 
-    function copyToClipboardImproved(text, messageDiv) {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        textArea.style.top = '0';
-        textArea.style.opacity = '0';
-        textArea.style.width = '1px';
-        textArea.style.height = '1px';
-        
-        document.body.appendChild(textArea);
-        
-        try {
-            textArea.focus();
-            textArea.select();
-            textArea.setSelectionRange(0, 99999);
-            
-            const successful = document.execCommand('copy');
-            
-            if (successful) {
-                showCopyMessage(messageDiv, '複製成功 ✅', 'success');
+        /* 主題切換 */
+        const toggleIcon = document.getElementById('toggleIcon');
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle && toggleIcon) {
+            if (!localStorage.getItem('themeMode')) {
+                document.body.classList.remove('light-mode');
+                toggleIcon.classList.add('active');
+            } else if (localStorage.getItem('themeMode') === 'light') {
+                document.body.classList.add('light-mode');
+                toggleIcon.classList.remove('active');
             } else {
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        showCopyMessage(messageDiv, '複製成功 ✅', 'success');
-                    }).catch(() => {
-                        showCopyMessage(messageDiv, '複製失敗 ❌', 'error');
-                    });
-                } else {
-                    showCopyMessage(messageDiv, '複製失敗 ❌', 'error');
-                }
+                document.body.classList.remove('light-mode');
+                toggleIcon.classList.add('active');
             }
-        } catch (err) {
-            console.error('共用複製錯誤:', err);
-            showCopyMessage(messageDiv, '複製失敗 ❌', 'error');
-        } finally {
-            document.body.removeChild(textArea);
-        }
-    }
-
-    function showCopyMessage(messageDiv, text, type) {
-        if (!messageDiv) return;
-        
-        messageDiv.innerText = text;
-        messageDiv.className = `copy-message copy-${type}`;
-        messageDiv.style.opacity = '1';
-        
-        setTimeout(() => {
-            messageDiv.style.opacity = '0';
-        }, 2000);
-    }
-
-    /* ================================
-    🌞🌙 主題切換功能
-    =============================== */
-    const toggleIcon = document.getElementById('toggleIcon');
-    if (toggleIcon) {
-        toggleIcon.addEventListener('click', () => {
-            toggleIcon.classList.toggle('active');
-            document.body.classList.toggle('dark-mode');
-        });
-    }
-
-    /* ================================
-    ⚡ 初始化
-    =============================== */
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('✅ 頁面載入完成，複製功能已初始化');
-        
-        const stepOneButton = document.querySelector('.step-one-copy');
-        if (stepOneButton) {
-            stepOneButton.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                copyStepOne();
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                toggleIcon.classList.toggle('active');
+                localStorage.setItem('themeMode', document.body.classList.contains('light-mode') ? 'light' : 'dark');
             });
         }
-    });
 
-    /* ================================
-    📄 實時渲染輸入區內容
-    =============================== */
-    function renderContent() {
-        const inputText = document.getElementById('inputText')?.value || '';
-        const renderArea = document.getElementById('renderArea');
-        
-        if (!renderArea) return;
-        
-        let htmlContent = inputText
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/\n/g, '<br>');
-        
-        const wordCountElement = '<div class="word-count">字數: <span id="wordCount">0</span></div>';
-        renderArea.innerHTML = wordCountElement + (htmlContent || '<p>在此處顯示輸入的內容。支援 HTML、CSS 和 Markdown 語法。</p>');
+        /* 渲染功能：只更新 renderContent，保留標題與字數 */
+        function renderContent() {
+            const input = document.getElementById('inputText')?.value || '';
+            const contentDiv = document.getElementById('renderContent');
+            if (!contentDiv) return;
 
-        let count = 0;
-        const regex = /[\u4e00-\u9fff]|[0-9]|[a-zA-Z]+(?:'[a-z]+)?|[^\w\s]/g;
-        const matches = inputText.match(regex);
-        if (matches) count = matches.length;
+            let html = input
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^### (.*$)/gim, '<h3 style="font-size:1.1rem;margin:8px 0;">$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2 style="font-size:1.3rem;margin:8px 0;">$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1 style="font-size:1.5rem;margin:8px 0;">$1</h1>')
+                .replace(/`([^`]+)`/g, '<code style="background:var(--bg-code);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);">$1</code>')
+                .replace(/\n/g, '<br>');
 
-        const wordCountSpan = document.getElementById('wordCount');
-        if (wordCountSpan) {
-            wordCountSpan.textContent = count;
+            contentDiv.innerHTML = html || '<p>在此處顯示輸入的內容。支援 HTML、CSS 和 Markdown 語法。</p>';
+
+            // 更新字數
+            let count = 0;
+            const regex = /[\u4e00-\u9fff]|[0-9]|[a-zA-Z]+(?:'[a-z]+)?|[^\w\s]/g;
+            const matches = input.match(regex);
+            if (matches) count = matches.length;
+            const wcSpan = document.getElementById('wordCount');
+            if (wcSpan) wcSpan.textContent = count;
         }
-    }
 
-    const inputText = document.getElementById('inputText');
-    if (inputText) {
-        inputText.addEventListener('input', renderContent);
-        renderContent();
-    }
-</script>
+        const inputTextEl = document.getElementById('inputText');
+        if (inputTextEl) {
+            inputTextEl.addEventListener('input', renderContent);
+            renderContent();
+        }
 
+        document.addEventListener('DOMContentLoaded', () => {
+            const stepOneBtn = document.querySelector('.step-one-copy');
+            if (stepOneBtn) {
+                stepOneBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    copyStepOne();
+                });
+            }
+        });
+    </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
